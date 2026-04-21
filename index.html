@@ -6,9 +6,9 @@
     <title>Garumuni | Cinnamon Logistics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; }
+        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; --green: #2ecc71; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 15px; }
-        .container { width: 100%; max-width: 450px; margin: auto; }
+        .container { width: 100%; max-width: 500px; margin: auto; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
         
         .role-switch { display: flex; background: #222; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
@@ -16,21 +16,28 @@
         .role-btn.active { background: var(--gold); color: #000; }
 
         .name-banner { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid #333; }
-        label { display: block; font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
+        label { display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
         input, select { width: 100%; padding: 14px; margin-top: 6px; background: #262626; border: 1px solid #383838; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
         
         .btn-submit { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; margin-top: 25px; cursor: pointer; }
         
-        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.98); display:none; padding: 30px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
-        .preview-box { background: #222; padding: 20px; border-radius: 20px; border: 1px solid var(--gold); margin-top: 20px; text-align: left; }
-        #qrcode { background: white; padding: 15px; display: inline-block; margin: 20px 0; border-radius: 10px; }
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.98); display:none; padding: 20px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
+        
+        /* Table Styling */
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #222; border-radius: 15px; overflow: hidden; font-size: 0.85rem; }
+        .comparison-table th { background: #333; padding: 10px; color: var(--gold); font-size: 0.7rem; text-transform: uppercase; }
+        .comparison-table td { padding: 12px 10px; border-bottom: 1px solid #333; text-align: center; }
+        .col-label { text-align: left !important; color: #888; font-weight: bold; width: 30%; }
+
+        .match-box { background: var(--green); color: #000; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
+        #qrcode { background: white; padding: 10px; display: inline-block; margin: 15px 0; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card">
-        <h2 style="color: var(--gold); margin: 0 0 15px 0;">Batch Entry</h2>
+        <h2 style="color: var(--gold); margin: 0 0 15px 0;">Cinnamon Log</h2>
         
         <div id="inspectorBanner" class="name-banner">
             <span id="displayName" style="font-size: 0.8rem; font-weight: bold;"></span>
@@ -44,14 +51,14 @@
 
         <form id="logForm">
             <div id="nameInputGroup">
-                <label>Inspector Name</label>
-                <input type="text" id="inspector" placeholder="Type your name">
+                <label>Inspector</label>
+                <input type="text" id="inspector" placeholder="Inspector Name">
             </div>
 
-            <label>Farmer Name</label>
-            <input type="text" id="farmer" placeholder="Source farmer name" required>
+            <label>Farmer</label>
+            <input type="text" id="farmer" placeholder="Farmer Name" required>
 
-            <label>Species / Grade</label>
+            <label>Grade</label>
             <select id="species">
                 <option value="Alba">Alba</option>
                 <option value="C5 Special">C5 Special</option>
@@ -64,33 +71,33 @@
             </select>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                <div>
-                    <label>Weight (kg)</label>
-                    <input type="number" id="weight" step="0.01" placeholder="0.00" required>
-                </div>
-                <div>
-                    <label>Length (in)</label>
-                    <input type="number" id="length" step="0.1" placeholder="0.0">
-                </div>
-                <div>
-                    <label>Moisture %</label>
-                    <input type="number" id="moisture" step="0.1" placeholder="0%">
-                </div>
+                <div><label>Wt (kg)</label><input type="number" id="weight" step="0.01" required></div>
+                <div><label>Len (in)</label><input type="number" id="length" step="0.1"></div>
+                <div><label>Moist %</label><input type="number" id="moisture" step="0.1"></div>
             </div>
 
-            <button type="button" class="btn-submit" id="mainBtn" onclick="submitLog()">SAVE & GENERATE QR</button>
+            <button type="button" class="btn-submit" id="mainBtn" onclick="submitLog()">SAVE & COMPARE</button>
         </form>
     </div>
 </div>
 
 <div id="overlay">
-    <h2 style="color: var(--gold); margin-bottom: 0;">BATCH RECORDED</h2>
+    <h2 style="color: var(--gold); margin-bottom: 5px;">VERIFICATION</h2>
     <div id="qrcode"></div>
     
-    <div class="preview-box">
-        <p style="color: var(--gold); font-weight: bold; margin-bottom: 10px; text-transform: uppercase; font-size: 0.7rem;">Verification Data</p>
-        <div id="summaryText" style="font-size: 0.95rem; line-height: 1.8;"></div>
-    </div>
+    <table class="comparison-table" id="compTable">
+        <thead>
+            <tr>
+                <th>Detail</th>
+                <th>Worker 1</th>
+                <th>Worker 2</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+
+    <div id="matchBox" class="match-box">✓ DATA MATCHED SUCCESSFULLY</div>
     
     <button class="btn-submit" onclick="location.reload()">NEXT BATCH</button>
 </div>
@@ -98,6 +105,8 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvj0uMuoUzLhdmkMGQPKQQtjbzwaliZCZqzqwKboFoBzLZMMq7gBUqleV5q8PoS_GB/exec";
     let role = "Worker 1";
+    // Using sessionStorage to track W1 data until W2 is entered
+    let sessionData = JSON.parse(sessionStorage.getItem('pending_batch')) || {};
 
     window.onload = () => {
         const savedName = localStorage.getItem('grmn_name');
@@ -110,7 +119,7 @@
     function showBanner(name) {
         document.getElementById('nameInputGroup').style.display = 'none';
         document.getElementById('inspectorBanner').style.display = 'flex';
-        document.getElementById('displayName').innerText = "Logged as: " + name;
+        document.getElementById('displayName').innerText = "Inspector: " + name;
     }
 
     function resetName() {
@@ -126,58 +135,72 @@
     }
 
     async function submitLog() {
-        const name = document.getElementById('inspector').value;
-        const farmer = document.getElementById('farmer').value;
-        const w = document.getElementById('weight').value;
-        const s = document.getElementById('species').value;
-        const l = document.getElementById('length').value || "0";
-        const m = document.getElementById('moisture').value || "0";
-        
-        if(!name || !farmer || !w) return alert("Please enter Inspector, Farmer, and Weight.");
-
-        localStorage.setItem('grmn_name', name);
-        const btn = document.getElementById('mainBtn');
-        btn.innerText = "UPLOADING...";
-        btn.disabled = true;
-
         const payload = {
             workerRole: role,
-            inspector: name,
-            farmer: farmer,
-            weight: w,
-            length: l,
-            moisture: m,
-            species: s,
+            inspector: document.getElementById('inspector').value,
+            farmer: document.getElementById('farmer').value,
+            weight: document.getElementById('weight').value,
+            length: document.getElementById('length').value || "0",
+            moisture: document.getElementById('moisture').value || "0",
+            species: document.getElementById('species').value,
             timestamp: new Date().toLocaleTimeString()
         };
+
+        if(!payload.inspector || !payload.farmer || !payload.weight) return alert("Fill required fields.");
+
+        const btn = document.getElementById('mainBtn');
+        btn.innerText = "PROCESSING..."; btn.disabled = true;
 
         try {
             const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await res.json();
             
+            // Logic: Store Worker 1 data, then compare when Worker 2 submits
+            if (role === "Worker 1") {
+                sessionStorage.setItem('pending_batch', JSON.stringify(payload));
+                updateUI(payload, null);
+            } else {
+                const w1Data = JSON.parse(sessionStorage.getItem('pending_batch'));
+                updateUI(w1Data, payload);
+                sessionStorage.removeItem('pending_batch'); // Clear after comparison
+            }
+
+            // QR Code with ID and Weight
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
-                text: result.details,
-                width: 180,
-                height: 180
+                text: `ID: ${result.id} | W: ${payload.weight}kg`,
+                width: 140, height: 140
             });
-
-            document.getElementById('summaryText').innerHTML = `
-                <b>Batch ID:</b> ${result.id}<br>
-                <b>Farmer:</b> ${farmer}<br>
-                <b>Species:</b> ${s}<br>
-                <b>Weight:</b> ${w} kg<br>
-                <b>Length:</b> ${l} in<br>
-                <b>Moisture:</b> ${m} %<br>
-                <hr style="border:0; border-top:1px solid #444; margin: 10px 0;">
-                <span style="color:#888; font-size:0.8rem">Verified by ${name} (${role}) at ${payload.timestamp}</span>
-            `;
 
             document.getElementById('overlay').style.display = 'block';
         } catch(e) {
-            alert("Error saving data.");
-            btn.innerText = "SAVE & GENERATE QR";
-            btn.disabled = false;
+            alert("Error saving.");
+            btn.innerText = "SAVE & COMPARE"; btn.disabled = false;
+        }
+    }
+
+    function updateUI(w1, w2) {
+        const body = document.getElementById('tableBody');
+        const rows = [
+            ["Farmer", w1?.farmer, w2?.farmer],
+            ["Grade", w1?.species, w2?.species],
+            ["Weight", w1?.weight + "kg", w2?.weight ? w2.weight + "kg" : "-"],
+            ["Moisture", w1?.moisture + "%", w2?.moisture ? w2.moisture + "%" : "-"]
+        ];
+
+        body.innerHTML = rows.map(row => `
+            <tr>
+                <td class="col-label">${row[0]}</td>
+                <td>${row[1] || "..."}</td>
+                <td>${row[2] || "WAITING"}</td>
+            </tr>
+        `).join('');
+
+        // Show Green Box if both exist and weight/species match
+        if (w1 && w2 && w1.weight === w2.weight && w1.species === w2.species) {
+            document.getElementById('matchBox').style.display = 'block';
+        } else {
+            document.getElementById('matchBox').style.display = 'none';
         }
     }
 </script>
