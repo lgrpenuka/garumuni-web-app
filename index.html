@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,7 @@
     <title>Garumuni | Cinnamon Logistics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; --green: #2ecc71; }
+        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; --green: #2ecc71; --red: #e74c3c; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 15px; }
         .container { width: 100%; max-width: 500px; margin: auto; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
@@ -30,6 +31,7 @@
         .col-label { text-align: left !important; color: #888; font-weight: bold; width: 30%; }
 
         .match-box { background: var(--green); color: #000; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
+        .mismatch-box { background: var(--red); color: #fff; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
         #qrcode { background: white; padding: 10px; display: inline-block; margin: 15px 0; border-radius: 10px; }
     </style>
 </head>
@@ -98,6 +100,7 @@
     </table>
 
     <div id="matchBox" class="match-box">✓ DATA MATCHED SUCCESSFULLY</div>
+    <div id="mismatchBox" class="mismatch-box">✗ DATA MISMATCH</div>
     
     <button class="btn-submit" onclick="location.reload()">NEXT BATCH</button>
 </div>
@@ -105,7 +108,6 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvj0uMuoUzLhdmkMGQPKQQtjbzwaliZCZqzqwKboFoBzLZMMq7gBUqleV5q8PoS_GB/exec";
     let role = "Worker 1";
-    // Using sessionStorage to track W1 data until W2 is entered
     let sessionData = JSON.parse(sessionStorage.getItem('pending_batch')) || {};
 
     window.onload = () => {
@@ -155,17 +157,15 @@
             const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
             const result = await res.json();
             
-            // Logic: Store Worker 1 data, then compare when Worker 2 submits
             if (role === "Worker 1") {
                 sessionStorage.setItem('pending_batch', JSON.stringify(payload));
                 updateUI(payload, null);
             } else {
                 const w1Data = JSON.parse(sessionStorage.getItem('pending_batch'));
                 updateUI(w1Data, payload);
-                sessionStorage.removeItem('pending_batch'); // Clear after comparison
+                sessionStorage.removeItem('pending_batch');
             }
 
-            // QR Code with ID and Weight
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
                 text: `ID: ${result.id} | W: ${payload.weight}kg`,
@@ -184,8 +184,9 @@
         const rows = [
             ["Farmer", w1?.farmer, w2?.farmer],
             ["Grade", w1?.species, w2?.species],
-            ["Weight", w1?.weight + "kg", w2?.weight ? w2.weight + "kg" : "-"],
-            ["Moisture", w1?.moisture + "%", w2?.moisture ? w2.moisture + "%" : "-"]
+            ["Weight", w1 ? w1.weight + "kg" : null, w2 ? w2.weight + "kg" : null],
+            ["Length", w1 ? w1.length + "in" : null, w2 ? w2.length + "in" : null],
+            ["Moisture", w1 ? w1.moisture + "%" : null, w2 ? w2.moisture + "%" : null]
         ];
 
         body.innerHTML = rows.map(row => `
@@ -196,14 +197,26 @@
             </tr>
         `).join('');
 
-        // Show Green Box if both exist and weight/species match
-        if (w1 && w2 && w1.weight === w2.weight && w1.species === w2.species) {
-            document.getElementById('matchBox').style.display = 'block';
-        } else {
-            document.getElementById('matchBox').style.display = 'none';
+        const matchBox = document.getElementById('matchBox');
+        const mismatchBox = document.getElementById('mismatchBox');
+        matchBox.style.display = 'none';
+        mismatchBox.style.display = 'none';
+
+        if (w1 && w2) {
+            const sameWeight = parseFloat(w1.weight) === parseFloat(w2.weight);
+            const sameLength = parseFloat(w1.length) === parseFloat(w2.length);
+            const sameMoisture = parseFloat(w1.moisture) === parseFloat(w2.moisture);
+            const sameSpecies = w1.species === w2.species;
+            const sameFarmer = (w1.farmer || "").trim().toLowerCase() === (w2.farmer || "").trim().toLowerCase();
+
+            if (sameWeight && sameLength && sameMoisture && sameSpecies && sameFarmer) {
+                matchBox.style.display = 'block';
+            } else {
+                mismatchBox.style.display = 'block';
+            }
         }
     }
 </script>
 
-</body>
+<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="7dbf4fd5-9e3b-467a-b318-f511357840f0"></script></body>
 </html>
