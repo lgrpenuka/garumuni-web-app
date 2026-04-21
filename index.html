@@ -11,24 +11,29 @@
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 15px; }
         .container { width: 100%; max-width: 500px; margin: auto; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
-        
-        .role-switch { display: flex; background: #222; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
-        .role-btn { flex: 1; border: none; padding: 10px; background: none; color: #666; font-weight: 800; cursor: pointer; border-radius: 7px; }
+
+        .role-switch { display: flex; background: #222; padding: 5px; border-radius: 10px; margin-bottom: 10px; }
+        .role-btn { flex: 1; border: none; padding: 12px; background: none; color: #666; font-weight: 800; cursor: pointer; border-radius: 7px; font-size: 0.9rem; }
         .role-btn.active { background: var(--gold); color: #000; }
+
+        .role-lock { text-align: center; font-size: 0.7rem; color: #888; margin-bottom: 18px; }
+        .role-lock b { color: var(--gold); }
 
         .name-banner { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid #333; }
         label { display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
         input, select { width: 100%; padding: 14px; margin-top: 6px; background: #262626; border: 1px solid #383838; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
-        
-        .btn-submit { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; margin-top: 25px; cursor: pointer; }
-        
+
+        .btn-submit { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; margin-top: 25px; cursor: pointer; font-size: 1rem; }
+        .btn-submit:disabled { opacity: 0.6; }
+
         #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.98); display:none; padding: 20px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
-        
-        /* Table Styling */
+
         .comparison-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #222; border-radius: 15px; overflow: hidden; font-size: 0.85rem; }
         .comparison-table th { background: #333; padding: 10px; color: var(--gold); font-size: 0.7rem; text-transform: uppercase; }
         .comparison-table td { padding: 12px 10px; border-bottom: 1px solid #333; text-align: center; }
         .col-label { text-align: left !important; color: #888; font-weight: bold; width: 30%; }
+        .cell-mismatch { background: rgba(231, 76, 60, 0.25); color: #ff8a80; font-weight: 700; }
+        .cell-match { color: #fff; }
 
         .match-box { background: var(--green); color: #000; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
         .mismatch-box { background: var(--red); color: #fff; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
@@ -40,16 +45,17 @@
 <div class="container">
     <div class="card">
         <h2 style="color: var(--gold); margin: 0 0 15px 0;">Cinnamon Log</h2>
-        
+
         <div id="inspectorBanner" class="name-banner">
             <span id="displayName" style="font-size: 0.8rem; font-weight: bold;"></span>
             <span onclick="resetName()" style="color: var(--gold); font-size: 0.7rem; cursor: pointer;">CHANGE</span>
         </div>
 
         <div class="role-switch">
-            <button id="w1" class="role-btn active" onclick="setRole('Worker 1')">WORKER 1</button>
-            <button id="w2" class="role-btn" onclick="setRole('Worker 2')">WORKER 2</button>
+            <button id="w1" class="role-btn" onclick="setRole('Worker 1')">WORKER 1 (LOAD)</button>
+            <button id="w2" class="role-btn" onclick="setRole('Worker 2')">WORKER 2 (UNLOAD)</button>
         </div>
+        <div class="role-lock">This device is locked to <b id="roleLockLabel">—</b>. Tap above to change.</div>
 
         <form id="logForm">
             <div id="nameInputGroup">
@@ -86,7 +92,7 @@
 <div id="overlay">
     <h2 style="color: var(--gold); margin-bottom: 5px;">VERIFICATION</h2>
     <div id="qrcode"></div>
-    
+
     <table class="comparison-table" id="compTable">
         <thead>
             <tr>
@@ -95,20 +101,18 @@
                 <th>Worker 2</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
 
     <div id="matchBox" class="match-box">✓ DATA MATCHED SUCCESSFULLY</div>
     <div id="mismatchBox" class="mismatch-box">✗ DATA MISMATCH</div>
-    
+
     <button class="btn-submit" onclick="location.reload()">NEXT BATCH</button>
 </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvj0uMuoUzLhdmkMGQPKQQtjbzwaliZCZqzqwKboFoBzLZMMq7gBUqleV5q8PoS_GB/exec";
-    let role = "Worker 1";
-    let sessionData = JSON.parse(sessionStorage.getItem('pending_batch')) || {};
+    let role = localStorage.getItem('grmn_role') || "Worker 1";
 
     window.onload = () => {
         const savedName = localStorage.getItem('grmn_name');
@@ -116,6 +120,7 @@
             document.getElementById('inspector').value = savedName;
             showBanner(savedName);
         }
+        setRole(role);
     };
 
     function showBanner(name) {
@@ -132,15 +137,26 @@
 
     function setRole(r) {
         role = r;
+        localStorage.setItem('grmn_role', r);
         document.getElementById('w1').className = r === 'Worker 1' ? 'role-btn active' : 'role-btn';
         document.getElementById('w2').className = r === 'Worker 2' ? 'role-btn active' : 'role-btn';
+        document.getElementById('roleLockLabel').innerText = r;
+        document.getElementById('mainBtn').innerText =
+            r === 'Worker 1' ? 'SAVE LOADING DATA' : 'SAVE & COMPARE WITH WORKER 1';
     }
 
     async function submitLog() {
+        const inspectorVal = document.getElementById('inspector').value.trim();
+        const farmerVal = document.getElementById('farmer').value.trim();
+
+        if (inspectorVal && !localStorage.getItem('grmn_name')) {
+            localStorage.setItem('grmn_name', inspectorVal);
+        }
+
         const payload = {
             workerRole: role,
-            inspector: document.getElementById('inspector').value,
-            farmer: document.getElementById('farmer').value,
+            inspector: inspectorVal,
+            farmer: farmerVal,
             weight: document.getElementById('weight').value,
             length: document.getElementById('length').value || "0",
             moisture: document.getElementById('moisture').value || "0",
@@ -148,54 +164,85 @@
             timestamp: new Date().toLocaleTimeString()
         };
 
-        if(!payload.inspector || !payload.farmer || !payload.weight) return alert("Fill required fields.");
+        if (!payload.inspector || !payload.farmer || !payload.weight) {
+            return alert("Fill required fields (Inspector, Farmer, Weight).");
+        }
+
+        // Confirm role to prevent accidental Worker 1 submissions on the unloading phone
+        const confirmMsg = role === 'Worker 1'
+            ? `Submit as WORKER 1 (loading) for farmer "${payload.farmer}"?`
+            : `Submit as WORKER 2 (unloading) for farmer "${payload.farmer}"?`;
+        if (!confirm(confirmMsg)) return;
 
         const btn = document.getElementById('mainBtn');
+        const oldText = btn.innerText;
         btn.innerText = "PROCESSING..."; btn.disabled = true;
 
         try {
-            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            // Use text/plain to avoid CORS preflight on Apps Script
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload),
+                redirect: 'follow'
+            });
             const result = await res.json();
-            
-            if (role === "Worker 1") {
-                sessionStorage.setItem('pending_batch', JSON.stringify(payload));
-                updateUI(payload, null);
-            } else {
-                const w1Data = JSON.parse(sessionStorage.getItem('pending_batch'));
-                updateUI(w1Data, payload);
-                sessionStorage.removeItem('pending_batch');
+
+            if (result.status && result.status.toLowerCase().indexOf('error') === 0) {
+                throw new Error(result.message || 'Server error');
             }
+            if (role === 'Worker 2' && result.status && result.status.indexOf('No matching') === 0) {
+                alert("Could not find a pending Worker 1 entry for this farmer today. Ask Worker 1 to submit first, or check the spelling of the farmer name.");
+                btn.innerText = oldText; btn.disabled = false;
+                return;
+            }
+
+            // Server now returns w1 + w2 snapshots so the UI works across devices
+            const w1Data = result.w1 || (role === 'Worker 1' ? payload : null);
+            const w2Data = result.w2 || (role === 'Worker 2' ? payload : null);
+            updateUI(w1Data, w2Data);
 
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
-                text: `ID: ${result.id} | W: ${payload.weight}kg`,
+                text: `ID: ${result.id} | F: ${payload.farmer} | W: ${payload.weight}kg`,
                 width: 140, height: 140
             });
 
             document.getElementById('overlay').style.display = 'block';
-        } catch(e) {
-            alert("Error saving.");
-            btn.innerText = "SAVE & COMPARE"; btn.disabled = false;
+        } catch (e) {
+            console.error(e);
+            alert("Error saving: " + e.message);
+            btn.innerText = oldText; btn.disabled = false;
         }
     }
 
     function updateUI(w1, w2) {
         const body = document.getElementById('tableBody');
-        const rows = [
-            ["Farmer", w1?.farmer, w2?.farmer],
-            ["Grade", w1?.species, w2?.species],
-            ["Weight", w1 ? w1.weight + "kg" : null, w2 ? w2.weight + "kg" : null],
-            ["Length", w1 ? w1.length + "in" : null, w2 ? w2.length + "in" : null],
-            ["Moisture", w1 ? w1.moisture + "%" : null, w2 ? w2.moisture + "%" : null]
+        const fields = [
+            ["Farmer", "farmer", false],
+            ["Grade", "species", false],
+            ["Weight", "weight", true, "kg"],
+            ["Length", "length", true, "in"],
+            ["Moisture", "moisture", true, "%"]
         ];
 
-        body.innerHTML = rows.map(row => `
-            <tr>
-                <td class="col-label">${row[0]}</td>
-                <td>${row[1] || "..."}</td>
-                <td>${row[2] || "WAITING"}</td>
-            </tr>
-        `).join('');
+        body.innerHTML = fields.map(f => {
+            const [label, key, isNum, unit] = f;
+            const v1 = w1 ? w1[key] : null;
+            const v2 = w2 ? w2[key] : null;
+            let mismatch = false;
+            if (w1 && w2) {
+                if (isNum) mismatch = parseFloat(v1) !== parseFloat(v2);
+                else mismatch = String(v1 || '').trim().toLowerCase() !== String(v2 || '').trim().toLowerCase();
+            }
+            const cls = (w1 && w2) ? (mismatch ? 'cell-mismatch' : 'cell-match') : '';
+            const fmt = v => (v === null || v === undefined || v === '') ? null : (isNum ? (v + (unit || '')) : v);
+            return `<tr>
+                <td class="col-label">${label}</td>
+                <td class="${cls}">${fmt(v1) || '...'}</td>
+                <td class="${cls}">${fmt(v2) || 'WAITING'}</td>
+            </tr>`;
+        }).join('');
 
         const matchBox = document.getElementById('matchBox');
         const mismatchBox = document.getElementById('mismatchBox');
@@ -203,20 +250,16 @@
         mismatchBox.style.display = 'none';
 
         if (w1 && w2) {
-            const sameWeight = parseFloat(w1.weight) === parseFloat(w2.weight);
-            const sameLength = parseFloat(w1.length) === parseFloat(w2.length);
-            const sameMoisture = parseFloat(w1.moisture) === parseFloat(w2.moisture);
-            const sameSpecies = w1.species === w2.species;
-            const sameFarmer = (w1.farmer || "").trim().toLowerCase() === (w2.farmer || "").trim().toLowerCase();
-
-            if (sameWeight && sameLength && sameMoisture && sameSpecies && sameFarmer) {
-                matchBox.style.display = 'block';
-            } else {
-                mismatchBox.style.display = 'block';
-            }
+            const ok =
+                parseFloat(w1.weight) === parseFloat(w2.weight) &&
+                parseFloat(w1.length) === parseFloat(w2.length) &&
+                parseFloat(w1.moisture) === parseFloat(w2.moisture) &&
+                w1.species === w2.species &&
+                String(w1.farmer || '').trim().toLowerCase() === String(w2.farmer || '').trim().toLowerCase();
+            (ok ? matchBox : mismatchBox).style.display = 'block';
         }
     }
 </script>
 
-<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="7dbf4fd5-9e3b-467a-b318-f511357840f0"></script></body>
+</body>
 </html>
