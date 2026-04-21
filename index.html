@@ -3,188 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Garumuni Logistics | Collector</title>
+    <title>Garumuni | Cinnamon Logistics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; --green: #4CAF50; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 480px; }
-        .card { background: var(--card); padding: 24px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 15px; }
+        .container { width: 100%; max-width: 450px; margin: auto; }
+        .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4444; margin-right: 5px; }
-        .online .status-dot { background: var(--green); }
+        .role-switch { display: flex; background: #222; padding: 5px; border-radius: 10px; margin-bottom: 20px; }
+        .role-btn { flex: 1; border: none; padding: 10px; background: none; color: #666; font-weight: 800; cursor: pointer; border-radius: 7px; }
+        .role-btn.active { background: var(--gold); color: #000; }
+
+        .name-banner { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid #333; }
+        label { display: block; font-size: 0.7rem; color: #888; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
+        input, select { width: 100%; padding: 14px; margin-top: 6px; background: #262626; border: 1px solid #383838; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
         
-        label { display: block; font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 15px; }
-        input, select { width: 100%; padding: 12px; margin-top: 6px; background: #262626; border: 1px solid #383838; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
+        .btn-submit { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; margin-top: 25px; cursor: pointer; }
         
-        /* Multi-Image Gallery */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .image-slot { 
-            aspect-ratio: 1; border: 2px dashed #444; border-radius: 12px; 
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #666; cursor: pointer; overflow: hidden;
-        }
-        .thumb { width: 100%; height: 100%; object-fit: cover; }
-        
-        .btn-primary { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; font-size: 1rem; margin-top: 25px; cursor: pointer; transition: transform 0.1s; }
-        .btn-secondary { background: #333; color: #fff; border: none; padding: 12px; width: 100%; border-radius: 12px; font-weight: 600; margin-top: 10px; cursor: pointer; }
-        
-        #sync-banner { background: var(--green); color: black; font-size: 0.8rem; font-weight: bold; padding: 10px; border-radius: 8px; margin-top: 15px; text-align: center; display: none; }
-        #qr-output { margin-top: 30px; text-align: center; display: none; background: #fff; padding: 20px; border-radius: 15px; color: #000; }
-        #batch-id-display { font-weight: 800; margin-top: 10px; font-family: monospace; font-size: 1.2rem; }
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.98); display:none; padding: 30px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
+        .preview-box { background: #222; padding: 20px; border-radius: 20px; border: 1px solid var(--gold); margin-top: 20px; text-align: left; }
+        #qrcode { background: white; padding: 15px; display: inline-block; margin: 20px 0; border-radius: 10px; }
     </style>
 </head>
-<body class="online">
+<body>
 
 <div class="container">
     <div class="card">
-        <div class="header">
-            <h2 style="margin:0; font-size: 1.1rem; color: var(--gold);">Stock Collection</h2>
-            <div id="connection-status" style="display: flex; align-items: center; font-size: 0.7rem;">
-                <div class="status-dot"></div> <span id="status-text">ONLINE</span>
-            </div>
+        <h2 style="color: var(--gold); margin: 0 0 15px 0;">Batch Entry</h2>
+        
+        <div id="inspectorBanner" class="name-banner">
+            <span id="displayName" style="font-size: 0.8rem; font-weight: bold;"></span>
+            <span onclick="resetName()" style="color: var(--gold); font-size: 0.7rem; cursor: pointer;">CHANGE</span>
         </div>
 
-        <div id="sync-banner">🔄 AUTO-SYNCING...</div>
+        <div class="role-switch">
+            <button id="w1" class="role-btn active" onclick="setRole('Worker 1')">WORKER 1</button>
+            <button id="w2" class="role-btn" onclick="setRole('Worker 2')">WORKER 2</button>
+        </div>
 
-        <form id="stockForm">
-            <label>GS Division / Route</label>
-            <input type="text" id="region" placeholder="e.g., Balapitiya West" required>
+        <form id="logForm">
+            <div id="nameInputGroup">
+                <label>Inspector Name</label>
+                <input type="text" id="inspector" placeholder="Type your name">
+            </div>
 
-            <label>Farmer / Supplier</label>
-            <input type="text" id="farmer" placeholder="Enter name" required>
+            <label>Farmer Name</label>
+            <input type="text" id="farmer" placeholder="Source farmer name" required>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label>Grade</label>
-                    <select id="grade">
-                        <option>Alba</option><option>C5-Special</option><option>C4</option>
-                    </select>
-                </div>
+            <label>Species / Grade</label>
+            <select id="species">
+                <option value="Alba">Alba</option>
+                <option value="C5 Special">C5 Special</option>
+                <option value="C5">C5</option>
+                <option value="C4">C4</option>
+                <option value="M5">M5</option>
+                <option value="M4">M4</option>
+                <option value="H1">H1</option>
+                <option value="Quillings">Quillings</option>
+            </select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                 <div>
                     <label>Weight (kg)</label>
-                    <input type="number" id="weight" step="0.1" placeholder="0.0" required>
+                    <input type="number" id="weight" step="0.01" placeholder="0.00" required>
+                </div>
+                <div>
+                    <label>Length (in)</label>
+                    <input type="number" id="length" step="0.1" placeholder="0.0">
+                </div>
+                <div>
+                    <label>Moisture %</label>
+                    <input type="number" id="moisture" step="0.1" placeholder="0%">
                 </div>
             </div>
 
-            <label>Verification (Up to 3 Photos)</label>
-            <div class="gallery-grid" id="galleryGrid">
-                <div class="image-slot" onclick="document.getElementById('fileInput').click()">+</div>
-            </div>
-            <input type="file" id="fileInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handleImages(this)">
-
-            <button type="button" class="btn-primary" onclick="handleSubmission()">SAVE & GENERATE QR</button>
+            <button type="button" class="btn-submit" id="mainBtn" onclick="submitLog()">SAVE & GENERATE QR</button>
         </form>
-
-        <div id="qr-output">
-            <div id="qrcode" style="display: flex; justify-content: center;"></div>
-            <div id="batch-id-display"></div>
-            <button class="btn-primary" style="margin-top:15px;" onclick="downloadQR()">DOWNLOAD TAG</button>
-            <button class="btn-secondary" onclick="document.getElementById('qr-output').style.display='none'">CLOSE</button>
-        </div>
     </div>
+</div>
+
+<div id="overlay">
+    <h2 style="color: var(--gold); margin-bottom: 0;">BATCH RECORDED</h2>
+    <div id="qrcode"></div>
+    
+    <div class="preview-box">
+        <p style="color: var(--gold); font-weight: bold; margin-bottom: 10px; text-transform: uppercase; font-size: 0.7rem;">Verification Data</p>
+        <div id="summaryText" style="font-size: 0.95rem; line-height: 1.8;"></div>
+    </div>
+    
+    <button class="btn-submit" onclick="location.reload()">NEXT BATCH</button>
 </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxvj0uMuoUzLhdmkMGQPKQQtjbzwaliZCZqzqwKboFoBzLZMMq7gBUqleV5q8PoS_GB/exec";
-    let imageArray = [];
-    let currentBatchID = "";
+    let role = "Worker 1";
 
-    window.addEventListener('online', () => { updateConnectivity(); autoSync(); });
-    window.addEventListener('offline', updateConnectivity);
+    window.onload = () => {
+        const savedName = localStorage.getItem('grmn_name');
+        if (savedName) {
+            document.getElementById('inspector').value = savedName;
+            showBanner(savedName);
+        }
+    };
 
-    function handleImages(input) {
-        const files = Array.from(input.files);
-        files.slice(0, 3).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                imageArray.push(e.target.result);
-                renderGallery();
-            };
-            reader.readAsDataURL(file);
-        });
+    function showBanner(name) {
+        document.getElementById('nameInputGroup').style.display = 'none';
+        document.getElementById('inspectorBanner').style.display = 'flex';
+        document.getElementById('displayName').innerText = "Logged as: " + name;
     }
 
-    function renderGallery() {
-        const grid = document.getElementById('galleryGrid');
-        grid.innerHTML = '<div class="image-slot" onclick="document.getElementById(\'fileInput\').click()">+</div>';
-        imageArray.forEach(src => {
-            const slot = document.createElement('div');
-            slot.className = 'image-slot';
-            const img = document.createElement('img');
-            img.src = src; img.className = 'thumb';
-            slot.appendChild(img);
-            grid.prepend(slot);
-        });
+    function resetName() {
+        localStorage.removeItem('grmn_name');
+        document.getElementById('nameInputGroup').style.display = 'block';
+        document.getElementById('inspectorBanner').style.display = 'none';
     }
 
-    async function handleSubmission() {
-        currentBatchID = "GRMN-" + Date.now().toString().slice(-8);
-        const data = {
-            batchID: currentBatchID,
-            region: document.getElementById('region').value,
-            farmer: document.getElementById('farmer').value,
-            grade: document.getElementById('grade').value,
-            weight: document.getElementById('weight').value,
-            photo: imageArray.join('|'), // Joined string for multiple photos
-            timestamp: new Date().toLocaleString(),
-            status: "Collected"
+    function setRole(r) {
+        role = r;
+        document.getElementById('w1').className = r === 'Worker 1' ? 'role-btn active' : 'role-btn';
+        document.getElementById('w2').className = r === 'Worker 2' ? 'role-btn active' : 'role-btn';
+    }
+
+    async function submitLog() {
+        const name = document.getElementById('inspector').value;
+        const farmer = document.getElementById('farmer').value;
+        const w = document.getElementById('weight').value;
+        const s = document.getElementById('species').value;
+        const l = document.getElementById('length').value || "0";
+        const m = document.getElementById('moisture').value || "0";
+        
+        if(!name || !farmer || !w) return alert("Please enter Inspector, Farmer, and Weight.");
+
+        localStorage.setItem('grmn_name', name);
+        const btn = document.getElementById('mainBtn');
+        btn.innerText = "UPLOADING...";
+        btn.disabled = true;
+
+        const payload = {
+            workerRole: role,
+            inspector: name,
+            farmer: farmer,
+            weight: w,
+            length: l,
+            moisture: m,
+            species: s,
+            timestamp: new Date().toLocaleTimeString()
         };
 
-        if(!data.farmer || !data.weight || !data.region) { alert("Fill all fields"); return; }
+        try {
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById("qrcode"), {
+                text: result.details,
+                width: 180,
+                height: 180
+            });
 
-        if (window.navigator.vibrate) navigator.vibrate([50, 30, 50]);
+            document.getElementById('summaryText').innerHTML = `
+                <b>Batch ID:</b> ${result.id}<br>
+                <b>Farmer:</b> ${farmer}<br>
+                <b>Species:</b> ${s}<br>
+                <b>Weight:</b> ${w} kg<br>
+                <b>Length:</b> ${l} in<br>
+                <b>Moisture:</b> ${m} %<br>
+                <hr style="border:0; border-top:1px solid #444; margin: 10px 0;">
+                <span style="color:#888; font-size:0.8rem">Verified by ${name} (${role}) at ${payload.timestamp}</span>
+            `;
 
-        let queue = JSON.parse(localStorage.getItem('grmn_queue') || "[]");
-        queue.push(data);
-        localStorage.setItem('grmn_queue', JSON.stringify(queue));
-
-        document.getElementById('qr-output').style.display = 'block';
-        document.getElementById('batch-id-display').innerText = currentBatchID;
-        const qrDiv = document.getElementById('qrcode');
-        qrDiv.innerHTML = "";
-        new QRCode(qrDiv, { text: `https://garumunifoods.com/trace?id=${currentBatchID}`, width: 180, height: 180 });
-
-        resetForm();
-        if(navigator.onLine) autoSync();
-    }
-
-    function downloadQR() {
-        const canvas = document.querySelector("#qrcode canvas");
-        const link = document.createElement('a');
-        link.download = `${currentBatchID}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-    }
-
-    function resetForm() {
-        document.getElementById('stockForm').reset();
-        imageArray = [];
-        renderGallery();
-    }
-
-    async function autoSync() {
-        const queue = JSON.parse(localStorage.getItem('grmn_queue') || "[]");
-        if(queue.length === 0) return;
-        document.getElementById('sync-banner').style.display = 'block';
-        const remaining = [];
-        for(const item of queue) {
-            try {
-                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(item) });
-            } catch(e) { remaining.push(item); }
+            document.getElementById('overlay').style.display = 'block';
+        } catch(e) {
+            alert("Error saving data.");
+            btn.innerText = "SAVE & GENERATE QR";
+            btn.disabled = false;
         }
-        localStorage.setItem('grmn_queue', JSON.stringify(remaining));
-        setTimeout(() => { document.getElementById('sync-banner').style.display = 'none'; }, 2000);
     }
-
-    function updateConnectivity() {
-        const isOnline = navigator.onLine;
-        document.body.className = isOnline ? 'online' : 'offline';
-        document.getElementById('status-text').innerText = isOnline ? 'ONLINE' : 'OFFLINE';
-    }
-
-    updateConnectivity();
-    if(navigator.onLine) autoSync();
 </script>
 
 </body>
