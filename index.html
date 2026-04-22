@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,40 +6,256 @@
     <title>Garumuni | Cinnamon Logistics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        :root { --gold: #c5a059; --bg: #0a0a0a; --card: #1a1a1a; --green: #2ecc71; --red: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #eee; margin: 0; padding: 15px; }
-        .container { width: 100%; max-width: 500px; margin: auto; }
-        .card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; }
+        :root, [data-theme="dark"] {
+            --gold: #c5a059;
+            --gold-2: #b58a44;
+            --text: #eeeeee;
+            --text-muted: #888;
+            --card-bg-1: rgba(26,20,14,0.45);
+            --card-bg-2: rgba(18,14,10,0.55);
+            --card-border: rgba(197,160,89,0.18);
+            --input-bg: #262626;
+            --input-border: #383838;
+            --input-text: #ffffff;
+            --pill-bg: #222;
+            --pill-border: #333;
+            --pill-text-inactive: #666;
+            --row-divider: #333;
+            --table-bg: #222;
+            --table-head-bg: #333;
+            --col-label: #888;
+            --overlay-bg: rgba(0,0,0,0.98);
+            --qr-bg: #ffffff;
+            --shadow-card: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(197,160,89,0.05) inset;
+            --bg-grad:
+                radial-gradient(1200px 600px at 10% -10%, rgba(197,160,89,0.10), transparent 60%),
+                radial-gradient(900px 500px at 110% 110%, rgba(120,72,30,0.18), transparent 60%),
+                linear-gradient(180deg, #0a0706 0%, #0a0a0a 60%, #060606 100%);
+            --stick-shadow: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+            --green: #2ecc71;
+            --red: #e74c3c;
+            --ripple: rgba(255,255,255,0.45);
+        }
+        [data-theme="light"] {
+            --gold: #8a5e1e;
+            --gold-2: #6e4612;
+            --text: #1a0f05;
+            --text-muted: #4a3520;
+            --card-bg-1: rgba(255,250,243,0.55);
+            --card-bg-2: rgba(248,238,222,0.65);
+            --card-border: rgba(168,122,48,0.35);
+            --input-bg: rgba(255,255,255,0.85);
+            --input-border: #d8c8a8;
+            --input-text: #2b1d10;
+            --pill-bg: rgba(255,255,255,0.7);
+            --pill-border: #e3d4b3;
+            --pill-text-inactive: #9a8866;
+            --row-divider: #ead9b6;
+            --table-bg: rgba(255,250,240,0.9);
+            --table-head-bg: #f1e3c4;
+            --col-label: #4a3520;
+            --overlay-bg: rgba(252,246,233,0.98);
+            --qr-bg: #ffffff;
+            --shadow-card: 0 20px 60px rgba(120,80,30,0.18), 0 0 0 1px rgba(168,122,48,0.10) inset;
+            --bg-grad:
+                radial-gradient(1200px 600px at 10% -10%, rgba(197,160,89,0.30), transparent 60%),
+                radial-gradient(900px 500px at 110% 110%, rgba(168,122,48,0.25), transparent 60%),
+                linear-gradient(180deg, #fff8ea 0%, #fbeed2 60%, #f5e2b8 100%);
+            --stick-shadow: drop-shadow(0 6px 10px rgba(120,72,20,0.25));
+            --ripple: rgba(120,72,20,0.25);
+        }
 
-        .role-switch { display: flex; background: #222; padding: 5px; border-radius: 10px; margin-bottom: 10px; }
-        .role-btn { flex: 1; border: none; padding: 12px; background: none; color: #666; font-weight: 800; cursor: pointer; border-radius: 7px; font-size: 0.9rem; }
-        .role-btn.active { background: var(--gold); color: #000; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text); margin: 0; padding: 15px;
+            background: var(--bg-grad);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.3s ease;
+            font-weight: 600;
+        }
+        h2 { font-weight: 900 !important; letter-spacing: 0.3px; }
 
-        .role-lock { text-align: center; font-size: 0.7rem; color: #888; margin-bottom: 18px; }
-        .role-lock b { color: var(--gold); }
+        /* Cinnamon animated background */
+        .cinnamon-bg {
+            position: fixed; inset: 0;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .cinnamon-bg .stick {
+            position: absolute;
+            top: -120px;
+            opacity: 0;
+            will-change: transform, opacity;
+            animation: drift linear infinite;
+            filter: var(--stick-shadow);
+        }
+        @keyframes drift {
+            0%   { transform: translate3d(0, -10vh, 0) rotate(var(--r0, 0deg)); opacity: 0; }
+            10%  { opacity: var(--op, 0.55); }
+            90%  { opacity: var(--op, 0.55); }
+            100% { transform: translate3d(var(--dx, 40px), 110vh, 0) rotate(var(--r1, 360deg)); opacity: 0; }
+        }
+        .cinnamon-bg .speck {
+            position: absolute;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: radial-gradient(circle, #c5a059 0%, rgba(197,160,89,0) 70%);
+            opacity: 0.6;
+            animation: floatSpeck linear infinite;
+        }
+        @keyframes floatSpeck {
+            0%   { transform: translate3d(0, 100vh, 0); opacity: 0; }
+            15%  { opacity: 0.7; }
+            85%  { opacity: 0.7; }
+            100% { transform: translate3d(20px, -10vh, 0); opacity: 0; }
+        }
 
-        .name-banner { background: #222; padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid #333; }
-        label { display: block; font-size: 0.65rem; color: #888; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
-        input, select { width: 100%; padding: 14px; margin-top: 6px; background: #262626; border: 1px solid #383838; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; }
+        .container { width: 100%; max-width: 500px; margin: auto; position: relative; z-index: 1; }
+        .card {
+            background: linear-gradient(180deg, var(--card-bg-1), var(--card-bg-2));
+            backdrop-filter: blur(22px) saturate(140%);
+            -webkit-backdrop-filter: blur(22px) saturate(140%);
+            padding: 25px; border-radius: 20px;
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
 
-        .btn-submit { background: var(--gold); color: #000; border: none; padding: 18px; width: 100%; border-radius: 12px; font-weight: 700; margin-top: 25px; cursor: pointer; font-size: 1rem; }
-        .btn-submit:disabled { opacity: 0.6; }
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed; top: 14px; right: 14px; z-index: 50;
+            width: 42px; height: 42px; border-radius: 50%;
+            background: var(--card-bg-2);
+            border: 1px solid var(--card-border);
+            color: var(--gold);
+            font-size: 1.1rem; cursor: pointer;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s ease, background 0.3s ease;
+        }
+        .theme-toggle:active { transform: scale(0.92); }
 
-        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.98); display:none; padding: 20px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
+        .role-switch {
+            display: flex; background: var(--pill-bg);
+            padding: 5px; border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid var(--pill-border);
+        }
+        .role-btn {
+            flex: 1; border: none; padding: 12px; background: none; color: var(--pill-text-inactive);
+            font-weight: 800; cursor: pointer; border-radius: 7px; font-size: 0.9rem;
+            transition: transform 0.12s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            position: relative; overflow: hidden;
+        }
+        .role-btn.active {
+            background: var(--gold); color: #fff;
+            box-shadow: 0 4px 14px rgba(197,160,89,0.35);
+            animation: rolePop 0.35s ease;
+        }
+        .role-btn:active { transform: scale(0.94); }
+        @keyframes rolePop {
+            0%   { transform: scale(0.9); }
+            60%  { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
 
-        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #222; border-radius: 15px; overflow: hidden; font-size: 0.85rem; }
-        .comparison-table th { background: #333; padding: 10px; color: var(--gold); font-size: 0.7rem; text-transform: uppercase; }
-        .comparison-table td { padding: 12px 10px; border-bottom: 1px solid #333; text-align: center; }
-        .col-label { text-align: left !important; color: #888; font-weight: bold; width: 30%; }
-        .cell-mismatch { background: rgba(231, 76, 60, 0.25); color: #ff8a80; font-weight: 700; }
-        .cell-match { color: #fff; }
+        /* Ripple effect */
+        .ripple {
+            position: absolute; border-radius: 50%;
+            background: var(--ripple);
+            transform: scale(0); opacity: 1;
+            pointer-events: none;
+            animation: rippleAnim 0.55s ease-out forwards;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(2.6); opacity: 0; }
+        }
 
-        .match-box { background: var(--green); color: #000; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
+        .role-lock { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 18px; font-weight: 700; }
+        .role-lock b { color: var(--gold); font-weight: 900; }
+
+        .name-banner { background: var(--pill-bg); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; align-items: center; justify-content: space-between; border: 1px solid var(--pill-border); font-weight: 700; }
+        label { display: block; font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; font-weight: 800; }
+        input, select {
+            width: 100%; padding: 14px; margin-top: 6px;
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            color: var(--input-text); border-radius: 10px; box-sizing: border-box; font-size: 1rem;
+            font-weight: 700;
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        input::placeholder { color: var(--text-muted); font-weight: 500; opacity: 0.45; }
+
+        .btn-submit {
+            background: linear-gradient(180deg, var(--gold), var(--gold-2));
+            color: #fff; border: none; padding: 18px; width: 100%;
+            border-radius: 12px; font-weight: 700; margin-top: 25px;
+            cursor: pointer; font-size: 1rem;
+            position: relative; overflow: hidden;
+            box-shadow: 0 8px 22px rgba(197,160,89,0.30), inset 0 1px 0 rgba(255,255,255,0.35);
+            transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .btn-submit:hover { filter: brightness(1.05); }
+        .btn-submit:active {
+            transform: scale(0.96) translateY(1px);
+            box-shadow: 0 3px 10px rgba(197,160,89,0.25), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-submit.flash { animation: btnFlash 0.5s ease; }
+        @keyframes btnFlash {
+            0%   { box-shadow: 0 0 0 0 rgba(197,160,89,0.7); }
+            100% { box-shadow: 0 0 0 24px rgba(197,160,89,0); }
+        }
+
+        #overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--overlay-bg); color: var(--text); display:none; padding: 20px; box-sizing: border-box; z-index: 100; text-align: center; overflow-y: auto; }
+
+        .comparison-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: var(--table-bg); border-radius: 15px; overflow: hidden; font-size: 0.9rem; }
+        .comparison-table th { background: var(--table-head-bg); padding: 10px; color: var(--gold); font-size: 0.72rem; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px; }
+        .comparison-table td { padding: 12px 10px; border-bottom: 1px solid var(--row-divider); text-align: center; color: var(--text); font-weight: 700; }
+        .col-label { text-align: left !important; color: var(--col-label); font-weight: 900; width: 30%; }
+        .cell-mismatch { background: rgba(231, 76, 60, 0.25); color: #c0392b; font-weight: 700; }
+        .cell-match { color: var(--text); }
+
+        .match-box { background: var(--green); color: #fff; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
         .mismatch-box { background: var(--red); color: #fff; padding: 15px; border-radius: 10px; font-weight: 800; margin-top: 20px; display: none; }
-        #qrcode { background: white; padding: 10px; display: inline-block; margin: 15px 0; border-radius: 10px; }
+        #qrcode { background: var(--qr-bg); padding: 10px; display: inline-block; margin: 15px 0; border-radius: 10px; }
     </style>
 </head>
 <body>
+
+<div class="cinnamon-bg" id="cinnamonBg" aria-hidden="true"></div>
+
+<button id="themeToggle" class="theme-toggle" type="button" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <linearGradient id="barkGrad" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%"  stop-color="#3a1d0c"/>
+            <stop offset="35%" stop-color="#7a3a14"/>
+            <stop offset="60%" stop-color="#a85a22"/>
+            <stop offset="100%" stop-color="#5a2a10"/>
+        </linearGradient>
+        <linearGradient id="barkShine" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%"  stop-color="rgba(255,210,150,0.35)"/>
+            <stop offset="50%" stop-color="rgba(255,210,150,0)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0.35)"/>
+        </linearGradient>
+
+        <symbol id="cinnamonStick" viewBox="0 0 120 28">
+            <rect x="2" y="4" width="116" height="20" rx="10" ry="10" fill="url(#barkGrad)"/>
+            <rect x="2" y="4" width="116" height="20" rx="10" ry="10" fill="url(#barkShine)"/>
+            <path d="M14 6 Q 18 14 14 22" stroke="rgba(0,0,0,0.45)" stroke-width="1.2" fill="none"/>
+            <path d="M34 6 Q 38 14 34 22" stroke="rgba(0,0,0,0.45)" stroke-width="1.2" fill="none"/>
+            <path d="M58 6 Q 62 14 58 22" stroke="rgba(0,0,0,0.45)" stroke-width="1.2" fill="none"/>
+            <path d="M82 6 Q 86 14 82 22" stroke="rgba(0,0,0,0.45)" stroke-width="1.2" fill="none"/>
+            <path d="M104 6 Q 108 14 104 22" stroke="rgba(0,0,0,0.45)" stroke-width="1.2" fill="none"/>
+            <ellipse cx="10" cy="14" rx="6" ry="9" fill="#2a1408"/>
+            <path d="M10 8 Q 14 14 10 20 Q 7 14 10 8" stroke="#c98a4d" stroke-width="0.8" fill="none"/>
+            <ellipse cx="110" cy="14" rx="6" ry="9" fill="#2a1408"/>
+            <path d="M110 8 Q 114 14 110 20 Q 107 14 110 8" stroke="#c98a4d" stroke-width="0.8" fill="none"/>
+            <rect x="8" y="6" width="104" height="3" rx="1.5" fill="rgba(255,220,170,0.18)"/>
+        </symbol>
+    </defs>
+</svg>
 
 <div class="container">
     <div class="card">
@@ -111,6 +326,101 @@
 </div>
 
 <script>
+    // ----- Theme -----
+    (function initTheme() {
+        const saved = localStorage.getItem('grmn_theme');
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const theme = saved || (prefersLight ? 'light' : 'dark');
+        applyTheme(theme);
+        document.addEventListener('DOMContentLoaded', () => {
+            const btn = document.getElementById('themeToggle');
+            if (btn) btn.addEventListener('click', () => {
+                const current = document.documentElement.getAttribute('data-theme') || 'dark';
+                applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
+        });
+    })();
+    function applyTheme(t) {
+        document.documentElement.setAttribute('data-theme', t);
+        localStorage.setItem('grmn_theme', t);
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+
+    // ----- Haptics + ripple -----
+    function haptic(pattern) {
+        try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {}
+    }
+    function spawnRipple(ev, el) {
+        const target = el || ev.currentTarget;
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = (ev.clientX || (rect.left + rect.width / 2)) - rect.left - size / 2;
+        const y = (ev.clientY || (rect.top + rect.height / 2)) - rect.top - size / 2;
+        const r = document.createElement('span');
+        r.className = 'ripple';
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = x + 'px';
+        r.style.top = y + 'px';
+        target.appendChild(r);
+        setTimeout(() => r.remove(), 600);
+    }
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-submit, .role-btn');
+        if (!btn || btn.disabled) return;
+        spawnRipple(e, btn);
+        haptic(btn.classList.contains('btn-submit') ? [12, 30, 18] : 15);
+    });
+
+    // ----- Cinnamon background animation -----
+    (function buildCinnamonBg() {
+        const bg = document.getElementById('cinnamonBg');
+        if (!bg) return;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const stickCount = reduceMotion ? 4 : 10;
+        const speckCount = reduceMotion ? 6 : 18;
+
+        for (let i = 0; i < stickCount; i++) {
+            const w = 70 + Math.random() * 100;
+            const h = w * (28 / 120);
+            const left = Math.random() * 100;
+            const dur = 22 + Math.random() * 28;
+            const delay = -Math.random() * dur;
+            const r0 = Math.random() * 360;
+            const r1 = r0 + (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 540);
+            const dx = (Math.random() - 0.5) * 200;
+            const op = 0.18 + Math.random() * 0.22;
+
+            const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            el.setAttribute('viewBox', '0 0 120 28');
+            el.setAttribute('class', 'stick');
+            el.style.width = w + 'px';
+            el.style.height = h + 'px';
+            el.style.left = left + 'vw';
+            el.style.animationDuration = dur + 's';
+            el.style.animationDelay = delay + 's';
+            el.style.setProperty('--r0', r0 + 'deg');
+            el.style.setProperty('--r1', r1 + 'deg');
+            el.style.setProperty('--dx', dx + 'px');
+            el.style.setProperty('--op', op);
+            el.innerHTML = '<use href="#cinnamonStick"/>';
+            bg.appendChild(el);
+        }
+
+        for (let i = 0; i < speckCount; i++) {
+            const sp = document.createElement('div');
+            sp.className = 'speck';
+            sp.style.left = (Math.random() * 100) + 'vw';
+            sp.style.bottom = (-Math.random() * 30) + 'vh';
+            const dur = 14 + Math.random() * 22;
+            sp.style.animationDuration = dur + 's';
+            sp.style.animationDelay = (-Math.random() * dur) + 's';
+            sp.style.transform = `scale(${0.6 + Math.random() * 1.4})`;
+            bg.appendChild(sp);
+        }
+    })();
+
     const API_URL = "https://script.google.com/macros/s/AKfycbxvj0uMuoUzLhdmkMGQPKQQtjbzwaliZCZqzqwKboFoBzLZMMq7gBUqleV5q8PoS_GB/exec";
     let role = localStorage.getItem('grmn_role') || "Worker 1";
 
@@ -168,7 +478,6 @@
             return alert("Fill required fields (Inspector, Farmer, Weight).");
         }
 
-        // Confirm role to prevent accidental Worker 1 submissions on the unloading phone
         const confirmMsg = role === 'Worker 1'
             ? `Submit as WORKER 1 (loading) for farmer "${payload.farmer}"?`
             : `Submit as WORKER 2 (unloading) for farmer "${payload.farmer}"?`;
@@ -179,7 +488,6 @@
         btn.innerText = "PROCESSING..."; btn.disabled = true;
 
         try {
-            // Use text/plain to avoid CORS preflight on Apps Script
             const res = await fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -197,7 +505,6 @@
                 return;
             }
 
-            // Server now returns w1 + w2 snapshots so the UI works across devices
             const w1Data = result.w1 || (role === 'Worker 1' ? payload : null);
             const w2Data = result.w2 || (role === 'Worker 2' ? payload : null);
             updateUI(w1Data, w2Data);
@@ -208,8 +515,18 @@
                 width: 140, height: 140
             });
 
+            btn.classList.add('flash');
+            setTimeout(() => btn.classList.remove('flash'), 500);
+
+            const matched = document.getElementById('matchBox').style.display === 'block';
+            const mismatched = document.getElementById('mismatchBox').style.display === 'block';
+            if (matched) haptic([20, 60, 20, 60, 20]);
+            else if (mismatched) haptic([60, 40, 60, 40, 120]);
+            else haptic([25, 40, 25]);
+
             document.getElementById('overlay').style.display = 'block';
         } catch (e) {
+            haptic([80, 40, 80]);
             console.error(e);
             alert("Error saving: " + e.message);
             btn.innerText = oldText; btn.disabled = false;
@@ -261,5 +578,5 @@
     }
 </script>
 
-<script src="https://replit-cdn.com/replit-pill/replit-pill.global.js" data-repl-id="0297f700-ffd7-42a8-b027-28d0e66d122b"></script></body>
+</body>
 </html>
